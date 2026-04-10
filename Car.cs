@@ -5,42 +5,58 @@
         public string Name { get; private set; } = string.Empty;
         public int Speed { get; set; }
 
-        private Random _random = new Random();
         private bool _running = false;
+        private Random _random = new Random();
 
         public Car(string name)
         {
             Name = name;
             Speed = 120;
+        }
 
+        // Start the car thread
+        public void Start()
+        {
+            Console.WriteLine($"{Name} startar!");
+            _running = true;
             Thread thread = new Thread(Drive);
             thread.Start();
         }
 
+        // Main driving loop
         private void Drive()
         {
             while (_running)
             {
-                int eventChance = _random.Next(50);
+                Thread.Sleep(10000);
+                TriggerEvent();
+            }
+        }
 
-                if (eventChance == 1)
-                {
-                    Pause(15);
-                }
-                else if (eventChance <= 2)
-                {
-                    Pause(10);
-                }
-                else if (eventChance <= 5)
-                {
-                    Pause(5);
-                }
-                else if (eventChance <= 10)
-                {
-                    DecreaseSpeed(1);
-                }
+        // Call a random event for the car
+        private void TriggerEvent()
+        {
+            int eventChance = _random.Next(50);
 
-                Thread.Sleep(100);
+            if (eventChance <= 1)
+            {
+                Console.WriteLine($"{Name}: Behöver tanka, stannar 15 sekunder");
+                Pause(15);
+            }
+            else if (eventChance <= 2)
+            {
+                Console.WriteLine($"{Name}: Behöver byta däck, stannar 10 sekunder");
+                Pause(10);
+            }
+            else if (eventChance <= 5)
+            {
+                Console.WriteLine($"{Name}: Behöver tvätta vindrutan, stannar 5 sekunder");
+                Pause(5);
+            }
+            else if (eventChance <= 10)
+            {
+                Console.WriteLine($"{Name}: Hastigheten på bilen sänks med 1 km/h");
+                DecreaseSpeed(1);
             }
         }
 

@@ -4,7 +4,8 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            var track = new RaceTrack();
+            track.StartRace();
         }
     }
 }
