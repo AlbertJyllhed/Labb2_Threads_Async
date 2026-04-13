@@ -4,9 +4,17 @@
     {
         public string Name { get; private set; } = string.Empty;
         public int Speed { get; set; }
+        public double Distance { get; private set; } = 0;
 
-        private bool _running = false;
         private Random _random = new Random();
+        private static readonly List<CarEvent> _events =
+        [
+            new(2, "Behöver tanka, stannar 15 sekunder", car => car.Pause(15)),
+            new(3, "Behöver byta däck, stannar 10 sekunder", car => car.Pause(10)),
+            new(8, "Behöver tvätta vindrutan, stannar 5 sek", car => car.Pause(5)),
+            new(15, "Hastigheten sänks med 1 km/h", car => car.DecreaseSpeed(1)),
+            new(72, null, _ => {}), // Nothing happens
+        ];
 
         public Car(string name)
         {
@@ -15,20 +23,19 @@
         }
 
         // Start the car thread
-        public void Start()
+        public void Start(double trackLength)
         {
-            Console.WriteLine($"{Name} startar!");
-            _running = true;
-            Thread thread = new Thread(Drive);
+            Thread thread = new Thread(() => Drive(trackLength));
             thread.Start();
         }
 
         // Main driving loop
-        private void Drive()
+        private void Drive(double trackLength)
         {
-            while (_running)
+            while (Distance < trackLength)
             {
                 Thread.Sleep(10000);
+                Distance += Speed / 3.6 * 10; // Convert km/h to m/s times 10 seconds
                 TriggerEvent();
             }
         }
@@ -36,27 +43,21 @@
         // Call a random event for the car
         private void TriggerEvent()
         {
-            int eventChance = _random.Next(50);
+            int roll = _random.Next(_events.Sum(e => e.Weight));
+            int weightTotal = 0;
 
-            if (eventChance <= 1)
+            foreach (var ev in _events)
             {
-                Console.WriteLine($"{Name}: Behöver tanka, stannar 15 sekunder");
-                Pause(15);
-            }
-            else if (eventChance <= 2)
-            {
-                Console.WriteLine($"{Name}: Behöver byta däck, stannar 10 sekunder");
-                Pause(10);
-            }
-            else if (eventChance <= 5)
-            {
-                Console.WriteLine($"{Name}: Behöver tvätta vindrutan, stannar 5 sekunder");
-                Pause(5);
-            }
-            else if (eventChance <= 10)
-            {
-                Console.WriteLine($"{Name}: Hastigheten på bilen sänks med 1 km/h");
-                DecreaseSpeed(1);
+                weightTotal += ev.Weight;
+                if (roll < weightTotal)
+                {
+                    if (ev.Message != null)
+                    {
+                        Console.WriteLine($"{Name}: {ev.Message}");
+                    }
+                    ev.Effect(this);
+                    return;
+                }
             }
         }
 
